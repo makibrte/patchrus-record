@@ -1,0 +1,6 @@
+{
+  "uploadSuccessMessage": "Video uploaded successfully",
+  "uploadErrorMessage": "Failed to upload video. Please try again.",
+  "uploadButtonTitle": "Upload Video",
+  "uploadButtonDescription": "Upload video to Patchrus"
+} 

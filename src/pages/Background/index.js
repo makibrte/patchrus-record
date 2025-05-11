@@ -1,5 +1,6 @@
 import saveToDrive from "./modules/saveToDrive";
 
+
 import {
   sendMessageTab,
   focusTab,
@@ -1582,6 +1583,7 @@ const checkAvailableMemory = (sendResponse) => {
 
 // Listen for messages
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log("request", request);
   if (request.type === "desktop-capture") {
     desktopCapture(request);
   } else if (request.type === "backup-created") {

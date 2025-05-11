@@ -1,3 +1,4 @@
+require('dotenv').config();
 var webpack = require("webpack"),
   path = require("path"),
   fileSystem = require("fs-extra"),
@@ -110,10 +111,6 @@ var options = {
         test: new RegExp(".(" + fileExtensions.join("|") + ")$"),
         type: "asset/resource",
         exclude: /node_modules/,
-        // loader: 'file-loader',
-        // options: {
-        //   name: '[name].[ext]',
-        // },
       },
       {
         test: /\.html$/,
@@ -139,13 +136,35 @@ var options = {
     alias: alias,
     extensions: fileExtensions
       .map((extension) => "." + extension)
-      .concat([".js", ".jsx", ".ts", ".tsx", ".css"]),
+      .concat([".js", ".jsx", ".ts", ".tsx", ".css"])
   },
   plugins: [
     new CleanWebpackPlugin({ verbose: false }),
     new webpack.ProgressPlugin(),
+    // Define environment variables for the browser
+    new webpack.DefinePlugin({
+      'window.env': JSON.stringify({
+        GOOGLE_CLIENT_EMAIL: process.env.GOOGLE_CLIENT_EMAIL,
+        GOOGLE_PRIVATE_KEY: process.env.GOOGLE_PRIVATE_KEY,
+        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+        GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+        NEXT_PUBLIC_GOOGLE_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_API_KEY
+      })
+    }),
     // expose and write the allowed env vars on the compiled bundle
-    new webpack.EnvironmentPlugin(["NODE_ENV"]),
+    new webpack.EnvironmentPlugin([
+      "NODE_ENV",
+      "PORT",
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY",
+      "AWS_REGION",
+      "DEEPGRAM_API_KEY",
+      "NEXT_PUBLIC_GOOGLE_API_KEY",
+      "GOOGLE_CLIENT_EMAIL",
+      "GOOGLE_PRIVATE_KEY",
+      "GOOGLE_CLIENT_ID",
+      "GOOGLE_CLIENT_SECRET"
+    ]),
     new CopyWebpackPlugin({
       patterns: [
         {
@@ -165,26 +184,6 @@ var options = {
         },
       ],
     }),
-    /*
-    new CopyWebpackPlugin({
-      patterns: [
-        {
-          from: "src/assets/img/icon-128.png",
-          to: path.join(__dirname, "build"),
-          force: true,
-        },
-      ],
-    }),
-    new CopyWebpackPlugin({
-      patterns: [
-        {
-          from: "src/assets/img/icon-34.png",
-          to: path.join(__dirname, "build"),
-          force: true,
-        },
-      ],
-    }),
-		*/
     new CopyWebpackPlugin({
       patterns: [
         {
@@ -303,7 +302,6 @@ var options = {
       template: path.join(__dirname, "src", "pages", "Backup", "index.html"),
       filename: "backup.html",
       chunks: ["backup"],
-      cache: false,
       favicon: path.join(__dirname, "src", "assets", "backup-favicon.ico"),
     }),
   ],

@@ -93,7 +93,8 @@
     "downloads",
     "tabs",
     "tabCapture",
-    "scripting"
+    "scripting",
+    "windows"
   ],
   "optional_permissions": ["offscreen", "desktopCapture", "alarms"]
 }

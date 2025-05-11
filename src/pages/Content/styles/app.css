@@ -3942,4 +3942,42 @@ html {
   color: #6E7684 !important;
   cursor: not-allowed;
   background-color: #F6F7FB !important;
-}/*# sourceMappingURL=app.css.map */
+}
+
+.recording-ui .TabsTriggerLabel {
+  text-align: center;
+}
+
+.customer-select {
+  padding: 16px;
+  margin-bottom: 8px;
+}
+
+.customer-select-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #29292F;
+  font-weight: 500;
+}
+
+.customer-select-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #E8E8E8;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #29292F;
+  background-color: #FFFFFF;
+  cursor: pointer;
+}
+
+.customer-select-input:focus {
+  outline: none;
+  border-color: #3080F8;
+  box-shadow: 0 0 0 2px rgba(48, 128, 248, 0.1);
+}
+
+.customer-select-input option {
+  padding: 8px;
+}

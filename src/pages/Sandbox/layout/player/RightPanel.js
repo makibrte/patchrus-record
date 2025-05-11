@@ -1,8 +1,9 @@
 import React, { useContext, useEffect, useState, useRef } from "react";
 import styles from "../../styles/player/_RightPanel.module.scss";
-
 import JSZip from "jszip";
-
+import { v4 as uuidv4 } from 'uuid';
+import AWS from 'aws-sdk';
+import { Buffer } from 'buffer';
 import { ReactSVG } from "react-svg";
 
 const URL =
@@ -13,19 +14,40 @@ import CropUI from "../editor/CropUI";
 import AudioUI from "../editor/AudioUI";
 
 // Context
-import { ContentStateContext } from "../../context/ContentState"; // Import the ContentState context
+import { ContentStateContext } from "../../context/ContentState";
+
+// Configure AWS
+AWS.config.update({
+  region: process.env.AWS_REGION,
+  credentials: new AWS.Credentials({
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  })
+});
+
+const s3 = new AWS.S3();
+
 
 const RightPanel = () => {
   const [contentState, setContentState] = useContext(ContentStateContext); // Access the ContentState context
   const [webmFallback, setWebmFallback] = useState(false);
   const contentStateRef = useRef(contentState);
   const consoleErrorRef = useRef([]);
+  const [customers, setCustomers] = useState([]);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   // Override console.error to catch errors from ffmpeg.wasm
   useEffect(() => {
     console.error = (error) => {
       consoleErrorRef.current.push(error);
     };
+    // Fetch customers from patchrus api
+    const fetchCustomers = async () => {
+      const response = await fetch("https://dev.patchrus.com/api/customers/get/base");
+      const data = await response.json();
+      setCustomers(data.data);
+    };
+    fetchCustomers();
   }, []);
 
   useEffect(() => {
@@ -95,6 +117,95 @@ const RightPanel = () => {
       ...prevContentState,
       driveEnabled: false,
     }));
+  };
+  const handleUpload = async (base64, selectedCustomer) => {
+    try {
+      console.log("Uploading video to S3...");
+      // Convert base64 to buffer
+      const buffer = Buffer.from(base64, 'base64');
+      
+      if (!selectedCustomer || !selectedCustomer.id) {
+        throw new Error("Invalid customer selected");
+      }
+      
+      // Generate unique filename
+      const filename = `${selectedCustomer.uuid}/${uuidv4()}.webm`;
+      
+      // Upload to S3
+      const params = {
+        Bucket: 'patchrus-proposals',
+        Key: filename,
+        Body: buffer,
+        ContentType: 'video/webm'
+      };
+
+
+      const result = await s3.upload(params).promise();
+      console.log("Upload result:", result);
+      const awsUrl = result.Location;
+      // Extract audio from video
+      //const videoBlob = new Blob([buffer], { type: 'video/webm' });
+      //console.log('Video blob size:', videoBlob.size);
+      //const audioBlob = await getAudio(videoBlob);
+      //console.log("Audio blob:", audioBlob);
+      const audioBlob = new Blob([buffer], { 
+        type: 'audio/webm;codecs=opus',
+        quality: 0.5 // Adjust quality to reduce size
+      });
+      const file = new File([audioBlob], 'recording.webm', { type: 'video/webm' });
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('model', 'whisper-1');
+      /*
+      if (audioBlob) {
+        const transcription = await transcribeAudio(audioBlob);
+        try{
+          const response = await fetch("https://dev.patchrus.com/api/rewritetranscript", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Origin": window.location.origin || "chrome-extension://" + chrome.runtime.id,
+              "Access-Control-Request-Method": "POST",
+              "Access-Control-Request-Headers": "Content-Type"
+            },
+            mode: 'cors',
+            credentials: 'include',
+            body: JSON.stringify({
+              transcript: transcription.text,
+              id: selectedCustomer.id,
+              awsUrl: awsUrl
+            }),
+          });
+          const data = await response.json();
+          console.log(data);
+        }catch(error){
+          console.log("Error rewriting transcript:", error);
+        }
+      }*/
+      try{
+        const response = await fetch("https://dev.patchrus.com/api/email/draft/create",{
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Origin": window.location.origin || "chrome-extension://" + chrome.runtime.id,
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "Content-Type"
+          },
+          body: JSON.stringify({
+            id: selectedCustomer.id
+          })
+        })
+      }catch(error){
+        console.log("Error creating email draft:", error);
+      }
+      // Show success message
+      alert("Upload successful!");
+    } catch (error) {
+      console.log('Error uploading video:', error);
+      // Show error message
+      alert("Upload failed!");
+    }
   };
 
   const handleEdit = () => {
@@ -229,8 +340,64 @@ const RightPanel = () => {
     }
   };
 
+  // Add message listener for upload responses
+  useEffect(() => {
+    const handleMessage = (message) => {
+      if (message.type === 'upload-success') {
+        contentState.openToast(chrome.i18n.getMessage("uploadSuccessMessage"), () => {});
+      } else if (message.type === 'upload-error') {
+        contentState.openToast(chrome.i18n.getMessage("uploadErrorMessage"), () => {});
+      }
+    };
+
+    chrome.runtime.onMessage.addListener(handleMessage);
+    return () => chrome.runtime.onMessage.removeListener(handleMessage);
+  }, [contentState]);
+
+  useEffect(() => {
+    console.log("selectedCustomer state changed:", selectedCustomer);
+  }, [selectedCustomer]);
+
+  useEffect(() => {
+    console.log("contentState.selectedCustomer changed:", contentState.selectedCustomer);
+  }, [contentState.selectedCustomer]);
+
+  // Initialize local state from context if it exists
+  useEffect(() => {
+    if (contentState.selectedCustomer && !selectedCustomer) {
+      setSelectedCustomer(contentState.selectedCustomer);
+    }
+  }, []);
+
   return (
     <div className={styles.panel}>
+      <div className="customer-select">
+        <label className="customer-select-label">
+          Select Customer
+          {chrome.i18n.getMessage("selectCustomerLabel")}
+        </label>
+        <select 
+          className="customer-select-input"
+          value={contentState.selectedCustomer ? contentState.selectedCustomer.id : ""}
+          onChange={(e) => {
+            console.log("Selected customer:", e.target.value);
+            const customerId = parseInt(e.target.value);
+            const selectedCustomer = customers.find(customer => customer.id === customerId);
+            setSelectedCustomer(selectedCustomer);
+            setContentState((prevContentState) => ({
+              ...prevContentState,
+              selectedCustomer: selectedCustomer
+            }));
+          }}
+        >
+          <option value="">{chrome.i18n.getMessage("selectCustomerPlaceholder")}</option>
+          {customers.map((customer) => (
+            <option key={customer.id} value={customer.id}>
+              {customer.job_name}
+            </option>
+          ))}
+        </select>
+      </div>
       {contentState.mode === "audio" && <AudioUI />}
       {contentState.mode === "crop" && <CropUI />}
       {contentState.mode === "player" && (
@@ -415,116 +582,48 @@ const RightPanel = () => {
                   <ReactSVG src={URL + "editor/icons/right-arrow.svg"} />
                 </div>
               </div>
-              <div
-                role="button"
-                className={styles.button}
-                onClick={handleCrop}
-                disabled={
-                  (contentState.duration > contentState.editLimit &&
-                    !contentState.override) ||
-                  !contentState.mp4ready ||
-                  contentState.noffmpeg
-                }
-              >
-                <div className={styles.buttonLeft}>
-                  <ReactSVG src={URL + "editor/icons/crop.svg"} />
-                </div>
-                <div className={styles.buttonMiddle}>
-                  <div className={styles.buttonTitle}>
-                    {chrome.i18n.getMessage("cropButtonTitle")}
-                  </div>
-                  <div className={styles.buttonDescription}>
-                    {contentState.offline && !contentState.ffmpegLoaded
-                      ? chrome.i18n.getMessage("noConnectionLabel")
-                      : contentState.updateChrome ||
-                        contentState.noffmpeg ||
-                        (contentState.duration > contentState.editLimit &&
-                          !contentState.override)
-                      ? chrome.i18n.getMessage("notAvailableLabel")
-                      : contentState.mp4ready
-                      ? chrome.i18n.getMessage("cropButtonDescription")
-                      : chrome.i18n.getMessage("preparingLabel")}
-                  </div>
-                </div>
-                <div className={styles.buttonRight}>
-                  <ReactSVG src={URL + "editor/icons/right-arrow.svg"} />
-                </div>
-              </div>
-              <div
-                role="button"
-                className={styles.button}
-                onClick={handleAddAudio}
-                disabled={
-                  (contentState.duration > contentState.editLimit &&
-                    !contentState.override) ||
-                  !contentState.mp4ready ||
-                  contentState.noffmpeg
-                }
-              >
-                <div className={styles.buttonLeft}>
-                  <ReactSVG src={URL + "editor/icons/audio.svg"} />
-                </div>
-                <div className={styles.buttonMiddle}>
-                  <div className={styles.buttonTitle}>
-                    {chrome.i18n.getMessage("addAudioButtonTitle")}
-                  </div>
-                  <div className={styles.buttonDescription}>
-                    {contentState.offline && !contentState.ffmpegLoaded
-                      ? chrome.i18n.getMessage("noConnectionLabel")
-                      : contentState.updateChrome ||
-                        contentState.noffmpeg ||
-                        (contentState.duration > contentState.editLimit &&
-                          !contentState.override)
-                      ? chrome.i18n.getMessage("notAvailableLabel")
-                      : contentState.mp4ready
-                      ? chrome.i18n.getMessage("addAudioButtonDescription")
-                      : chrome.i18n.getMessage("preparingLabel")}
-                  </div>
-                </div>
-                <div className={styles.buttonRight}>
-                  <ReactSVG src={URL + "editor/icons/right-arrow.svg"} />
-                </div>
-              </div>
             </div>
           </div>
           <div className={styles.section}>
             <div className={styles.sectionTitle}>
               {chrome.i18n.getMessage("sandboxSaveTitle")}
             </div>
-            {contentState.driveEnabled && (
-              <div
-                className={styles.buttonLogout}
-                onClick={() => {
-                  signOutDrive();
-                }}
-              >
-                {chrome.i18n.getMessage("signOutDriveLabel")}
-              </div>
-            )}
             <div className={styles.buttonWrap}>
               <div
                 role="button"
                 className={styles.button}
-                onClick={saveToDrive}
-                disabled={contentState.saveDrive}
+                onClick={() => {
+                  if (!contentState.mp4ready) return;
+                  if (!contentState.selectedCustomer) {
+                    contentState.openToast("Please select a customer first", () => {});
+                    return;
+                  }
+                  // Convert blob to base64
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    const dataUrl = reader.result;
+                    const base64 = dataUrl.split(",")[1];
+        
+                    // Call handleUpload with the base64 data and selected customer
+                    handleUpload(base64, contentState.selectedCustomer);
+                  };
+                  reader.readAsDataURL(contentState.blob);
+                }}
+                disabled={!contentState.mp4ready}
               >
                 <div className={styles.buttonLeft}>
-                  <ReactSVG src={URL + "editor/icons/drive.svg"} />
+                  <ReactSVG src={URL + "editor/icons/upload.svg"} />
                 </div>
                 <div className={styles.buttonMiddle}>
                   <div className={styles.buttonTitle}>
-                    {contentState.saveDrive
-                      ? chrome.i18n.getMessage("savingDriveLabel")
-                      : contentState.driveEnabled
-                      ? chrome.i18n.getMessage("saveDriveButtonTitle")
-                      : chrome.i18n.getMessage("signInDriveLabel")}
+                    Upload video
                   </div>
                   <div className={styles.buttonDescription}>
                     {contentState.offline
                       ? chrome.i18n.getMessage("noConnectionLabel")
                       : contentState.updateChrome
                       ? chrome.i18n.getMessage("notAvailableLabel")
-                      : chrome.i18n.getMessage("saveDriveButtonDescription")}
+                      : chrome.i18n.getMessage("uploadButtonDescription")}
                   </div>
                 </div>
                 <div className={styles.buttonRight}>
@@ -632,46 +731,6 @@ const RightPanel = () => {
                   </div>
                 </div>
               )}
-              <div
-                role="button"
-                className={styles.button}
-                onClick={() => {
-                  if (!contentState.mp4ready) return;
-                  contentState.downloadGIF();
-                }}
-                disabled={
-                  contentState.isFfmpegRunning ||
-                  contentState.duration > 30 ||
-                  !contentState.mp4ready ||
-                  contentState.noffmpeg
-                }
-              >
-                <div className={styles.buttonLeft}>
-                  <ReactSVG src={URL + "editor/icons/gif.svg"} />
-                </div>
-                <div className={styles.buttonMiddle}>
-                  <div className={styles.buttonTitle}>
-                    {contentState.downloadingGIF
-                      ? chrome.i18n.getMessage("downloadingLabel")
-                      : chrome.i18n.getMessage("downloadGIFButtonTitle")}
-                  </div>
-                  <div className={styles.buttonDescription}>
-                    {contentState.offline && !contentState.ffmpegLoaded
-                      ? chrome.i18n.getMessage("noConnectionLabel")
-                      : contentState.updateChrome ||
-                        contentState.noffmpeg ||
-                        (contentState.duration > contentState.editLimit &&
-                          !contentState.override)
-                      ? chrome.i18n.getMessage("notAvailableLabel")
-                      : contentState.mp4ready
-                      ? chrome.i18n.getMessage("downloadGIFButtonDescription")
-                      : chrome.i18n.getMessage("preparingLabel")}
-                  </div>
-                </div>
-                <div className={styles.buttonRight}>
-                  <ReactSVG src={URL + "editor/icons/right-arrow.svg"} />
-                </div>
-              </div>
             </div>
           </div>
           <div className={styles.section}>

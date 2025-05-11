@@ -72,6 +72,7 @@ const ContentState = (props) => {
     fallback: false,
     chunkCount: 0,
     chunkIndex: 0,
+    selectedCustomer: null,
   };
 
   const [contentState, setContentState] = useState(defaultState);
@@ -101,7 +102,7 @@ const ContentState = (props) => {
     });
     setContentState((prevState) => ({
       ...prevState,
-      title: `Screenity video - ${formattedDate}`,
+      title: `Proposal video - ${formattedDate}`,
     }));
   }, []);
 
