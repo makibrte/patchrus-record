@@ -184,6 +184,7 @@ const RightPanel = () => {
           console.log("Error rewriting transcript:", error);
         }
       }*/
+     /*
       try{
         const response = await fetch("https://dev.patchrus.com/api/email/draft/create",{
           method: "POST",
@@ -200,6 +201,7 @@ const RightPanel = () => {
       }catch(error){
         console.log("Error creating email draft:", error);
       }
+        */
       // Show success message
       alert("Upload successful!");
     } catch (error) {

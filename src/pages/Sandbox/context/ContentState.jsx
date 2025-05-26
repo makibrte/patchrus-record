@@ -19,7 +19,7 @@ const ContentState = (props) => {
 
   const defaultState = {
     time: 0,
-    editLimit: 420,
+    editLimit: 900,
     blob: null,
     webm: null,
     originalBlob: null,
