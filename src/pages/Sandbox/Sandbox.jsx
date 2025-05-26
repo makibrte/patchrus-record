@@ -17,6 +17,11 @@ const Sandbox = () => {
   const parentRef = useRef(null);
   const progress = useRef("");
 
+  useEffect(() => {
+    // Set the document title
+    document.title = contentState.title ? `PatchRus - ${contentState.title}` : 'PatchRus - Video Editor';
+  }, [contentState.title]);
+
   // Check when going offline (listener)
   // useEffect(() => {
   //   window.addEventListener("offline", () => {
@@ -117,7 +122,7 @@ const Sandbox = () => {
       {contentState.mode != "edit" && contentState.ready && <Player />}
       {!contentState.ready && (
         <div className="wrap">
-          <img className="logo" src="/assets/logo-text.svg" />
+          <img className="logo" src="/assets/logo.png" />
           <div className="middle-area">
             <img src="/assets/record-tab-active.svg" />
             <div className="title">

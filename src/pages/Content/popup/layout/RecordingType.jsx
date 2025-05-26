@@ -300,26 +300,6 @@ const RecordingType = (props) => {
         </span>
       </button>
       <Settings />
-      <div className="customer-select">
-        <label className="customer-select-label">
-          {chrome.i18n.getMessage("selectCustomerLabel")}
-        </label>
-        <select
-          className="customer-select-input"
-          value={contentState.selectedCustomer || ""}
-          onChange={(e) => {
-            setContentState((prevState) => ({
-              ...prevState,
-              selectedCustomer: e.target.value
-            }));
-          }}
-        >
-          <option value="">Select a customer</option>
-          <option value="customer1">Customer 1</option>
-          <option value="customer2">Customer 2</option>
-          <option value="customer3">Customer 3</option>
-        </select>
-      </div>
     </div>
   );
 };

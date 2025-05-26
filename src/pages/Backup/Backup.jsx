@@ -464,7 +464,7 @@ const Backup = () => {
       )}
       <img
         className="setupLogo"
-        src={chrome.runtime.getURL("assets/logo-text.svg")}
+        src={chrome.runtime.getURL("assets/logo.png")}
       />
       <style>
         {`

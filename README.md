@@ -1,26 +1,11 @@
-# Screenity
-[![jiewjjc232](https://github.com/alyssaxuu/screenity/assets/7581348/ed55e52e-4adf-442b-b774-6856abacdffb)](https://screenity.io)
+# PatchRus Record
+Forked from https://github.com/alyssaxuu/screenity
 
-
-The free and privacy-friendly screen recorder with no limits 🎥
-
-[Get it now - it's free!](https://chrome.google.com/webstore/detail/screenity-screen-recorder/kbbdabhdfibnancpjfhlkhafgdilcnji)
-
-Screenity is a powerful privacy-friendly screen recorder and annotation tool to make better videos for work, education, and more. You can create stunning product demos, tutorials, presentations, or share feedback with your team - all for free.
-
-> You can support this project (and many others) through [GitHub Sponsors](https://github.com/sponsors/alyssaxuu)! ❤️
-
-Made by [Alyssa X](https://alyssax.com)
-
-<a href="https://www.producthunt.com/posts/screenity?utm_source=badge-top-post-badge&utm_medium=badge&utm_souce=badge-screenity" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=275308&theme=light&period=daily" alt="Screenity - The most powerful screen recorder for Chrome | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
-<a href="https://news.ycombinator.com/item?id=25150804" target="_blank"><img height=53 src="https://hackerbadge.now.sh/api?id=25150804&type=orange" alt="Featured on HackerNews"></a>
-
-> ❗️ Screenity has been rebuilt from the ground up, and updated to MV3. [Click here](https://help.screenity.io/getting-started/77KizPC8MHVGfpKpqdux9D/what%E2%80%99s-changed-in-the-new-version-of-screenity/bDtvcwAtw9PPesQeNH4zjE) to here to learn more about why, and what's changed in the new version. Also note that **the license has changed to [GPLv3](https://github.com/alyssaxuu/screenity/blob/master/LICENSE)**, but the older MV2 version remains MIT licensed. Make sure you read the license and the [Terms of Service](https://screenity.io/en/terms/) regarding intellectual property.
-
+Used for The Patchboys of South Milwaukee and Brookfield as a proposal recording tool. 
 ## Table of contents
 
 - [Features](#features)
-- [Self-hosting Screenity](#self-hosting-screenity)
+- [Self-hosting PatchRus Record](#self-hosting-screenity)
 - [Creating a development version](#creating-a-development-version)
   - [Enabling Save to Google Drive](#enabling-save-to-google-drive)
 - [Acknowledgements](#acknowledgements)
@@ -31,6 +16,8 @@ Made by [Alyssa X](https://alyssax.com)
 🎙️ Record your microphone or internal audio, and use features like push to talk<br>
 ✏️ Annotate by drawing anywhere on the screen, adding text, arrows, shapes, and more<br>
 ✨ Use AI-powered camera backgrounds or blur to enhance your recordings<br>
+🤖 AI transriptions and job proposal writing powered by AWS Transcribe and OpenAI API <br>
+🔼 Uploads to AWS S3 for later cliet viewing <br>
 🔎 Zoom in smoothly in your recordings to focus on specific areas<br>
 🪄 Blur out any sensitive content of any page to keep it private<br>
 ✂️ Remove or add audio, cut, trim, or crop your recordings with a comprehensive editor<br>
@@ -41,14 +28,11 @@ Made by [Alyssa X](https://alyssax.com)
 🔒 Only you can see your videos, we don’t collect any of your data. You can even go offline!<br>
 💙 No limits, make as many videos as you want, for as long as you want<br> …and much more - all for free & no sign in needed!
 
-## Self-hosting Screenity
+## Self-hosting PatchRus Record
 
-You can run Screenity locally without having to install it from the Chrome Store. Here's how:
+You can run PatchRus Record locally without having to install it from the Chrome Store. All you need is a build directory. Due to this being for internal use the build directory is provided directly.
 
-1. Download the latest Build.zip from the [releases page](https://github.com/alyssaxuu/screenity/releases)
-2. Load the extension by pasting `chrome://extensions/` in the address bar, and [enabling developer mode](https://developer.chrome.com/docs/extensions/mv2/faq/#:~:text=You%20can%20start%20by%20turning,a%20packaged%20extension%2C%20and%20more.).
-3. Drag the folder that contains the code (make sure it's a folder and not a ZIP file, so unzip first), or click on the "Load unpacked" button and locate the folder.
-4. That's it, you should now be able to use Screenity locally. [Follow these instructions](#enabling-save-to-google-drive) to set up the Google Drive integration.
+
 
 ## Creating a development version
 
@@ -82,9 +66,6 @@ You can create it accessing [Google Cloud Console](https://console.cloud.google.
 
 ## Acknowledgements
 
-- Thanks to [HelpKit](https://www.helpkit.so/) for sponsoring this project by hosting the [Screenity Help Center](https://help.screenity.io/).
-- Thanks to [Mei Xuan](https://www.behance.net/meixuanloo) for helping with the Chinese translation of the extension.
+- Thanks to screenity.io for providing their recording software tool, it is amazing!
 
-If you need any help, or want to become a Screenity expert, you can browse articles and guides in the [help center](https://help.screenity.io). You can also submit any feedback or ideas in this [form](https://tally.so/r/3ElpXq), or contact through [this page](https://help.screenity.io/contact)
-
-Feel free to reach out to me through email at hi@alyssax.com or [on Twitter](https://twitter.com/alyssaxuu) if you have any questions or feedback! Hope you find this useful 💜
+If you need any help contact me@matejam.com

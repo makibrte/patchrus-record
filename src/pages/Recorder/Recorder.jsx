@@ -681,7 +681,7 @@ const Recorder = () => {
     <div className="wrap">
       <img
         className="logo"
-        src={chrome.runtime.getURL("assets/logo-text.svg")}
+        src={chrome.runtime.getURL("assets/logo.png")}
       />
       <div className="middle-area">
         <img src={chrome.runtime.getURL("assets/record-tab-active.svg")} />
@@ -732,7 +732,7 @@ const Recorder = () => {
 					width: 100%;
 					height:100%;
 					background: url('` +
-          chrome.runtime.getURL("assets/helper/pattern-svg.svg") +
+          chrome.runtime.getURL("assets/logo.png") +
           `') repeat;
 					background-size: 62px 23.5px;
 					animation: moveBackground 138s linear infinite;
