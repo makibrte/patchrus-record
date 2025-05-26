@@ -45,7 +45,8 @@ const RightPanel = () => {
     const fetchCustomers = async () => {
       const response = await fetch("https://dev.patchrus.com/api/customers/get/base");
       const data = await response.json();
-      setCustomers(data.data);
+      console.log(data.data.data)
+      setCustomers(data.data.data);
     };
     fetchCustomers();
   }, []);
