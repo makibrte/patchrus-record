@@ -866,14 +866,34 @@ const ContentState = (props) => {
           showPopup: false,
         }));
       } else if (request.type === "stop-recording-tab") {
-        chrome.storage.local.set({ recording: false });
-        setContentState((prevContentState) => ({
-          ...prevContentState,
-          recording: false,
-          paused: false,
-          showExtension: false,
-          showPopup: true,
-        }));
+        // Get benchmarks from storage
+        chrome.storage.local.get(['recordingBenchmarks'], async (result) => {
+          const benchmarks = result.recordingBenchmarks || {};
+          benchmarks.editorReceiveStop = performance.now();
+          
+          chrome.storage.local.set({ recording: false });
+          setContentState((prevContentState) => ({
+            ...prevContentState,
+            recording: false,
+            paused: false,
+            showExtension: false,
+            showPopup: true,
+          }));
+
+          // Update benchmarks with final timing
+          benchmarks.editorStateUpdated = performance.now();
+          await chrome.storage.local.set({ recordingBenchmarks: benchmarks });
+
+          // Log benchmarks
+          console.log('Recording Pipeline Benchmarks:', {
+            'Stop Recording Start': benchmarks.stopRecordingStart,
+            'All Streams Stopped': benchmarks.allStreamsStopped,
+            'Final Chunk Processed': benchmarks.finalChunkProcessed,
+            'Editor Received Stop': benchmarks.editorReceiveStop,
+            'Editor State Updated': benchmarks.editorStateUpdated,
+            'Total Time (ms)': benchmarks.editorStateUpdated - benchmarks.stopRecordingStart
+          });
+        });
       } else if (request.type === "recording-ended") {
         if (
           !contentStateRef.current.showPopup &&

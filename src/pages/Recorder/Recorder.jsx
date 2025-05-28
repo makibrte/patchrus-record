@@ -250,7 +250,16 @@ const Recorder = () => {
 
       if (isFinishing.current) {
         sentLast.current = true;
-        chrome.runtime.sendMessage({ type: "video-ready" });
+        // Update benchmarks with final chunk time
+        const { recordingBenchmarks } = await chrome.storage.local.get(['recordingBenchmarks']);
+        if (recordingBenchmarks) {
+          recordingBenchmarks.finalChunkProcessed = performance.now();
+          await chrome.storage.local.set({ recordingBenchmarks });
+        }
+        chrome.runtime.sendMessage({ 
+          type: "video-ready",
+          benchmarkTime: performance.now() // Add timestamp when video-ready is sent
+        });
       }
     };
 
@@ -279,6 +288,10 @@ const Recorder = () => {
 
   async function stopRecording() {
     isFinishing.current = true;
+    const benchmarks = {
+      stopRecordingStart: performance.now()
+    };
+
     if (recorder.current !== null) {
       recorder.current.stop();
       recorder.current = null;
@@ -304,6 +317,10 @@ const Recorder = () => {
       });
       helperAudioStream.current = null;
     }
+
+    benchmarks.allStreamsStopped = performance.now();
+    // Store benchmarks in chrome.storage for the editor to access
+    await chrome.storage.local.set({ recordingBenchmarks: benchmarks });
   }
 
   const dismissRecording = async () => {

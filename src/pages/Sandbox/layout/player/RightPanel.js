@@ -596,23 +596,35 @@ const RightPanel = () => {
                 role="button"
                 className={styles.button}
                 onClick={() => {
-                  if (!contentState.mp4ready) return;
+                  if (!contentState.ready) {
+                    return;
+                  }
                   if (!contentState.selectedCustomer) {
                     contentState.openToast("Please select a customer first", () => {});
                     return;
                   }
+
+                  // Determine which blob to use
+                  const videoBlob = contentState.mp4ready ? contentState.blob : contentState.webm;
+                  
+                  if (!videoBlob) {
+                    contentState.openToast("Video is not ready yet", () => {});
+                    return;
+                  }
+
                   // Convert blob to base64
                   const reader = new FileReader();
+                  reader.onerror = () => {
+                    contentState.openToast("Error reading video file", () => {});
+                  };
                   reader.onload = () => {
                     const dataUrl = reader.result;
                     const base64 = dataUrl.split(",")[1];
-        
-                    // Call handleUpload with the base64 data and selected customer
                     handleUpload(base64, contentState.selectedCustomer);
                   };
-                  reader.readAsDataURL(contentState.blob);
+                  reader.readAsDataURL(videoBlob);
                 }}
-                disabled={!contentState.mp4ready}
+                disabled={!contentState.ready || (!contentState.webm && !contentState.blob)}
               >
                 <div className={styles.buttonLeft}>
                   <ReactSVG src={URL + "editor/icons/upload.svg"} />

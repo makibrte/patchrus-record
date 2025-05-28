@@ -1,0 +1,12 @@
+{
+  "background": {
+    "service_worker": "workers/videoProcessor.worker.js",
+    "type": "module"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["workers/*.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+} 
