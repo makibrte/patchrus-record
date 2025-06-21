@@ -607,6 +607,16 @@ const RightPanel = () => {
                   // Determine which blob to use
                   const videoBlob = contentState.mp4ready ? contentState.blob : contentState.webm;
                   
+                  console.log('Upload attempt:', {
+                    ready: contentState.ready,
+                    mp4ready: contentState.mp4ready,
+                    webmAvailable: !!contentState.webm,
+                    blobAvailable: !!contentState.blob,
+                    selectedBlob: videoBlob ? 'available' : 'null',
+                    blobSize: videoBlob ? videoBlob.size : 'N/A',
+                    blobType: videoBlob ? videoBlob.type : 'N/A'
+                  });
+                  
                   if (!videoBlob) {
                     contentState.openToast("Video is not ready yet", () => {});
                     return;
@@ -615,11 +625,13 @@ const RightPanel = () => {
                   // Convert blob to base64
                   const reader = new FileReader();
                   reader.onerror = () => {
+                    console.error('FileReader error during upload');
                     contentState.openToast("Error reading video file", () => {});
                   };
                   reader.onload = () => {
                     const dataUrl = reader.result;
                     const base64 = dataUrl.split(",")[1];
+                    console.log('Base64 conversion successful, length:', base64.length);
                     handleUpload(base64, contentState.selectedCustomer);
                   };
                   reader.readAsDataURL(videoBlob);

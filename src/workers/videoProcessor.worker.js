@@ -16,7 +16,7 @@ chrome.runtime.onConnect.addListener((port) => {
               data: {
                 index,
                 chunk,
-                timestamp
+                timestam
               }
             });
           } catch (error) {

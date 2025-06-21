@@ -202,6 +202,8 @@ const ContentState = (props) => {
       type: "video/webm; codecs=vp8, opus",
     });
 
+    console.log('Reconstructing video, blob size:', blob.size);
+
     const { recordingDuration } = await chrome.storage.local.get(
       "recordingDuration"
     );
@@ -223,6 +225,7 @@ const ContentState = (props) => {
 
     // Check if user is in Windows 10
     const isWindows10 = navigator.userAgent.match(/Windows NT 10.0/);
+    console.log('Is Windows 10:', !!isWindows10, 'Recording duration:', recordingDuration);
 
     try {
       if (recordingDuration > 0 && recordingDuration !== null) {
@@ -231,6 +234,7 @@ const ContentState = (props) => {
             blob,
             recordingDuration,
             async (fixedWebm) => {
+              console.log('Non-Windows: Fixed WebM size:', fixedWebm.size);
               if (
                 contentStateRef.current.fallback ||
                 contentStateRef.current.updateChrome ||
@@ -239,6 +243,7 @@ const ContentState = (props) => {
                   contentStateRef.current.editLimit &&
                   !contentStateRef.current.override)
               ) {
+                console.log('Non-Windows: Setting webm in fallback mode');
                 setContentState((prevState) => ({
                   ...prevState,
                   webm: fixedWebm,
@@ -248,9 +253,17 @@ const ContentState = (props) => {
                 return;
               }
 
+              // Set the webm in state before processing base64
+              console.log('Non-Windows: Setting webm in normal mode');
+              setContentState((prevState) => ({
+                ...prevState,
+                webm: fixedWebm,
+              }));
+
               const reader = new FileReader();
               reader.onloadend = function () {
                 const base64data = reader.result;
+                console.log('Non-Windows: Base64 conversion complete');
                 setContentState((prevContentState) => ({
                   ...prevContentState,
                   base64: base64data,
@@ -265,6 +278,7 @@ const ContentState = (props) => {
           const fixedWebm = await fixWebmDurationFallback(blob, {
             type: "video/webm; codecs=vp8, opus",
           });
+          console.log('Windows: Fixed WebM size:', fixedWebm.size);
 
           if (
             contentStateRef.current.fallback ||
@@ -274,6 +288,7 @@ const ContentState = (props) => {
               contentStateRef.current.editLimit &&
               !contentStateRef.current.override)
           ) {
+            console.log('Windows: Setting webm in fallback mode');
             setContentState((prevState) => ({
               ...prevState,
               webm: fixedWebm,
@@ -283,9 +298,17 @@ const ContentState = (props) => {
             return;
           }
 
+          // Set the webm in state before processing base64
+          console.log('Windows: Setting webm in normal mode');
+          setContentState((prevState) => ({
+            ...prevState,
+            webm: fixedWebm,
+          }));
+
           const reader = new FileReader();
           reader.onloadend = function () {
             const base64data = reader.result;
+            console.log('Windows: Base64 conversion complete');
             setContentState((prevContentState) => ({
               ...prevContentState,
               base64: base64data,
@@ -296,6 +319,7 @@ const ContentState = (props) => {
         }
       } else {
         /// Skip fixing duration
+        console.log('Skipping duration fix, using raw blob');
         if (
           contentStateRef.current.fallback ||
           contentStateRef.current.updateChrome ||
@@ -304,6 +328,7 @@ const ContentState = (props) => {
             contentStateRef.current.editLimit &&
             !contentStateRef.current.override)
         ) {
+          console.log('No duration: Setting webm in fallback mode');
           setContentState((prevState) => ({
             ...prevState,
             webm: blob,
@@ -313,9 +338,17 @@ const ContentState = (props) => {
           return;
         }
 
+        // Set the webm in state before processing base64
+        console.log('No duration: Setting webm in normal mode');
+        setContentState((prevState) => ({
+          ...prevState,
+          webm: blob,
+        }));
+
         const reader = new FileReader();
         reader.onloadend = function () {
           const base64data = reader.result;
+          console.log('No duration: Base64 conversion complete');
           setContentState((prevContentState) => ({
             ...prevContentState,
             base64: base64data,
@@ -325,6 +358,7 @@ const ContentState = (props) => {
         reader.readAsDataURL(blob);
       }
     } catch (error) {
+      console.error('Error in reconstructVideo:', error);
       setContentState((prevState) => ({
         ...prevState,
         webm: blob,
